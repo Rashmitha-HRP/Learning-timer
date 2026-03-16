@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O/L 2026 Master Dashboard - Rashmitha EDITZ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        :root {
+            --red: #ff3e3e;
+            --bg: #050505;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 62, 62, 0.2);
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 50%, #1a0808 0%, #050505 100%);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header { text-align: center; margin-bottom: 40px; }
+        #current-time { font-size: 4rem; font-weight: 900; margin: 0; }
+        #current-date { color: var(--red); font-weight: bold; text-transform: uppercase; letter-spacing: 4px; font-size: 0.9rem; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 25px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .card:hover { border-color: var(--red); transform: translateY(-5px); }
+
+        h2 { font-size: 0.9rem; color: var(--red); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+
+        /* O/L COUNTDOWN */
+        .ol-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .ol-box { background: rgba(0,0,0,0.4); padding: 15px 5px; border-radius: 15px; border: 1px solid #222; }
+        .ol-num { font-size: 1.8rem; font-weight: 900; display: block; }
+        .ol-label { font-size: 0.6rem; color: #666; }
+
+        /* POMODORO */
+        #timer-display { font-size: 5.5rem; font-weight: 900; margin: 15px 0; color: var(--red); }
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+        button { 
+            background: var(--red); border: none; padding: 14px 30px; border-radius: 12px; 
+            color: white; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        button.secondary { background: #1a1a1a; border: 1px solid #333; }
+
+        /* TO-DO LIST */
+        .todo-input-wrap { display: flex; gap: 8px; margin-bottom: 15px; }
+        input { flex: 1; background: #111; border: 1px solid #333; padding: 12px; border-radius: 10px; color: white; outline: none; }
+        .todo-list { list-style: none; padding: 0; max-height: 180px; overflow-y: auto; text-align: left; }
+        .todo-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; }
+
+        /* MOTIVATION */
+        #quote-text { font-style: italic; color: #ccc; min-height: 60px; font-size: 1rem; line-height: 1.4; display: flex; align-items: center; justify-content: center; }
+
+        footer { margin-top: 50px; color: #444; font-weight: bold; font-size: 0.8rem; letter-spacing: 3px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div id="current-date">LOADING...</div>
+        <h1 id="current-time">00:00:00</h1>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <h2>O/L 2026 Countdown</h2>
+            <div class="ol-grid">
+                <div class="ol-box"><span class="ol-num" id="d">00</span><span class="ol-label">Days</span></div>
+                <div class="ol-box"><span class="ol-num" id="h">00</span><span class="ol-label">Hours</span></div>
+                <div class="ol-box"><span class="ol-num" id="m">00</span><span class="ol-label">Mins</span></div>
+                <div class="ol-box"><span class="ol-num" id="s">00</span><span class="ol-label">Secs</span></div>
+            </div>
+        </div>
+
+        <div class="card" style="grid-row: span 2;">
+            <h2>Focus Session</h2>
+            <div id="status-text" style="font-size: 0.7rem; color: #888;">TIME TO STUDY!</div>
+            <div id="timer-display">25:00</div>
+            <div class="btn-group">
+                <button onclick="toggleTimer()" id="start-btn">START</button>
+                <button class="secondary" onclick="resetTimer()">RESET</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Motivation</h2>
+            <p id="quote-text">"සූදානම් වීම ජයග්‍රහණයෙන් අඩකි."</p>
+        </div>
+
+        <div class="card">
+            <h2>Study Goals</h2>
+            <div class="todo-input-wrap">
+                <input type="text" id="taskInput" placeholder="අලුත් ඉලක්කයක්...">
+                <button onclick="addTask()">ADD</button>
+            </div>
+            <div class="todo-list" id="todoList"></div>
+        </div>
+    </div>
+
+    <footer>© COPYRIGHT Rashmitha EDITZ</footer>
+
+    <script>
+        // LIVE CLOCK
+        function clock() {
+            const now = new Date();
+            document.getElementById("current-time").innerText = now.toLocaleTimeString('en-US', { hour12: false });
+            document.getElementById("current-date").innerText = now.toLocaleDateString('si-LK', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+        }
+        setInterval(clock, 1000); clock();
+
+        // O/L COUNTDOWN
+        const target = new Date("December 8, 2026 08:30:00").getTime();
+        setInterval(() => {
+            const diff = target - new Date().getTime();
+            document.getElementById("d").innerText = Math.floor(diff / (1000 * 60 * 60 * 24));
+            document.getElementById("h").innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            document.getElementById("m").innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            document.getElementById("s").innerText = Math.floor((diff % (1000 * 60)) / 1000);
+        }, 1000);
+
+        // MOTIVATION QUOTES
+        const quotes = [
+            "අද කරන කැපවීම හෙට ඔබේ සාර්ථකත්වය තීරණය කරයි.",
+            "අසීරුම කඳු මුදුන්වලට හොඳම දර්ශන උරුම වේ.",
+            "සාර්ථකත්වයේ රහස වන්නේ සාමාන්‍ය දේ අසාමාන්‍ය ලෙස කිරීමයි.",
+            "ඔබට කළ හැකැයි ඔබ විශ්වාස කරන්නේ නම්, ඔබ අඩක් ජයගෙන ඇත.",
+            "අසාර්ථකත්වය යනු නැවත බුද්ධිමත්ව ආරම්භ කිරීමට ඇති අවස්ථාවයි.",
+            "හීන දකින්න, ඒ වෙනුවෙන් වැඩ කරන්න, ඒවා සැබෑ කරගන්න.",
+            "වේදනාව තාවකාලිකයි, ජයග්‍රහණය සදාකාලිකයි.",
+            "නතර නොවන්න, ඔබ සිටින්නේ ජයග්‍රහණයට ඉතා ආසන්නව විය හැක.",
+            "ඔබේ උපරිමය අද කරන්න, හෙට දිනය ඔබට ස්තූති කරනු ඇත.",
+            "විවේක ගන්න, නමුත් කිසිවිටෙකත් අත්නොහරින්න.",
+            "විනය යනු ඔබට අවශ්‍ය දේ සහ ඔබට වඩාත්ම අවශ්‍ය දේ අතර තේරීමයි.",
+            "කුඩා පියවර දිනක විශාල ගමනක ආරම්භය වේ.",
+            "දක්ෂතාවයට වඩා උත්සාහය ජයග්‍රහණයට මඟ පාදයි.",
+            "ඔබේ කාලය සීමිතයි, එය වෙනත් අයෙකුගේ ජීවිතයක් ජීවත් වීමට නාස්ති නොකරන්න.",
+            "ජයග්‍රහණය යනු පුරුද්දකි."
+        ];
+        setInterval(() => {
+            document.getElementById("quote-text").style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById("quote-text").innerText = `"${quotes[Math.floor(Math.random()*quotes.length)]}"`;
+                document.getElementById("quote-text").style.opacity = 1;
+            }, 500);
+        }, 15000);
+
+        // POMODORO
+        let time = 25 * 60, running = false, interval, mode = "Work";
+        function toggleTimer() {
+            if(running) { clearInterval(interval); running = false; document.getElementById("start-btn").innerText = "RESUME"; }
+            else {
+                running = true; document.getElementById("start-btn").innerText = "PAUSE";
+                interval = setInterval(() => {
+                    time--;
+                    let m = Math.floor(time/60), s = time%60;
+                    document.getElementById("timer-display").innerText = `${m<10?'0'+m:m}:${s<10?'0'+s:s}`;
+                    if(time <= 0) {
+                        clearInterval(interval); running = false;
+                        alert(mode === "Work" ? "Break Time!" : "Study Time!");
+                        mode = (mode === "Work") ? "Break" : "Work";
+                        time = (mode === "Work") ? 25*60 : 5*60;
+                        document.getElementById("status-text").innerText = mode.toUpperCase() + " MODE";
+                        toggleTimer();
+                    }
+                }, 1000);
+            }
+        }
+        function resetTimer() { clearInterval(interval); running = false; time = 25*60; document.getElementById("timer-display").innerText = "25:00"; document.getElementById("start-btn").innerText = "START"; }
+
+        // TO-DO LIST
+        function addTask() {
+            let input = document.getElementById("taskInput");
+            if(!input.value) return;
+            let tasks = JSON.parse(localStorage.getItem("rash_tasks") || "[]");
+            tasks.push(input.value);
+            localStorage.setItem("rash_tasks", JSON.stringify(tasks));
+            input.value = ""; renderTasks();
+        }
+        function renderTasks() {
+            let tasks = JSON.parse(localStorage.getItem("rash_tasks") || "[]");
+            document.getElementById("todoList").innerHTML = tasks.map((t, i) => `
+                <div class="todo-item"><span>✅ ${t}</span><button style="border:none; background:none; color:#555; cursor:pointer;" onclick="delTask(${i})">✖</button></div>
+            `).join("");
+        }
+        function delTask(i) {
+            let tasks = JSON.parse(localStorage.getItem("rash_tasks") || "[]");
+            tasks.splice(i, 1);
+            localStorage.setItem("rash_tasks", JSON.stringify(tasks));
+            renderTasks();
+        }
+        renderTasks();
+    </script>
+</body>
+</html>
